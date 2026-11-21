@@ -208,7 +208,7 @@
 
     const titles = picks.concat(spares).filter((q) => q.t.kind === "image").map((q) => q.it.title);
     if (titles.length) {
-      app.innerHTML = '<section class="message"><p>טוען תמונות</p></section>';
+      app.innerHTML = '<section class="message message--wait"><p>טוען תמונות</p></section>';
       try {
         await fetchThumbs(titles, PLAY_SIZE);
       } catch (e) {
