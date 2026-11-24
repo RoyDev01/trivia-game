@@ -108,6 +108,18 @@
     }
   }
 
+  /* Items with a `file` use that Wikimedia Commons file, not the article's lead image. */
+  function pinFiles(list, size) {
+    list.forEach((it) => {
+      if (it.title && it.file) {
+        thumbs.set(size + "|" + it.title, {
+          src: "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(it.file) + "?width=" + size,
+          file: it.file
+        });
+      }
+    });
+  }
+
   /* A photo the owner added themselves: images/<topic>/<id>.jpg. Resolves to its URL, or null. */
   function ownPhoto(topicId, itemId) {
     const key = topicId + "/" + itemId;
@@ -219,6 +231,7 @@
     const titles = picks.concat(spares).filter((q) => q.it.title).map((q) => q.it.title);
     if (titles.length) {
       app.innerHTML = '<section class="message message--wait"><p>טוען תמונות</p></section>';
+      pinFiles(picks.concat(spares).map((q) => q.it), PLAY_SIZE);
       try {
         await fetchThumbs(titles, PLAY_SIZE);
       } catch (e) {
@@ -435,6 +448,7 @@
     window.scrollTo(0, 0);
     const titles = [];
     imageTopics.forEach((t) => t.items.forEach((it) => titles.push(it.title)));
+    imageTopics.forEach((t) => pinFiles(t.items, GALLERY_SIZE));
     try {
       await fetchThumbs(titles, GALLERY_SIZE);
     } catch (e) {

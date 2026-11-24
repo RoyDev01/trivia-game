@@ -2,6 +2,7 @@
   שאלות המשחק.
   kind: "people"  - כרטיס רמז. אם קיים קובץ images/<topic id>/<item id>.jpg הוא מוצג במקום הכרטיס.
   kind: "image"   - התמונה הראשית של הערך באנגלית בוויקיפדיה (title).
+                    file = שם קובץ בוויקישיתוף, כשרוצים תמונה אחרת מהתמונה הראשית.
   a = התשובה הנכונה, w = שלוש תשובות שגויות.
 */
 window.TRIVIA = {
@@ -136,7 +137,7 @@ window.TRIVIA = {
         { title: "Brandenburg Gate", a: "ברלין", w: ["וינה", "ורשה", "פראג"] },
         { title: "Forbidden City", a: "בייג׳ינג", w: ["טוקיו", "סיאול", "האנוי"] },
         { title: "Hungarian Parliament Building", a: "בודפשט", w: ["וינה", "פראג", "בוקרשט"] },
-        { title: "Petronas Towers", a: "קואלה לומפור", w: ["סינגפור", "ג׳קרטה", "בנגקוק"] },
+        { title: "Petronas Towers", file: "Petronas Panorama II (4to3).jpg", a: "קואלה לומפור", w: ["סינגפור", "ג׳קרטה", "בנגקוק"] },
         { title: "Cathedral of Brasília", a: "ברזיליה", w: ["בואנוס איירס", "לימה", "בוגוטה"] },
         { title: "India Gate", a: "ניו דלהי", w: ["איסלאמאבאד", "דאקה", "קטמנדו"] },
         { title: "Wat Arun", a: "בנגקוק", w: ["האנוי", "פנום פן", "ויינטיאן"] },
