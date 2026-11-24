@@ -22,6 +22,7 @@
     pm: '<svg viewBox="0 0 48 48" aria-hidden="true"><g fill="currentColor"><circle cx="24" cy="12" r="7"/><path d="M9 25h30l-3 8H12z"/><path d="M17 33h14v10H17z"/></g></svg>',
     capitals: '<svg viewBox="0 0 48 48" aria-hidden="true"><g fill="currentColor"><path d="M24 5 5 17h38z"/><path d="M10 21h6v15h-6zM21 21h6v15h-6zM32 21h6v15h-6z"/><path d="M5 38h38v5H5z"/></g></svg>',
     ww2: '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="currentColor" d="M24 3c2.2 0 3.5 3 3.5 6.5V18L45 27.5V33l-17.5-4.5V37l5.5 4.2V44L24 41.8 15 44v-2.800L20.500 37v-8.500L3 33v-5.500L20.500 18V9.500C20.500 6 21.800 3 24 3z"/></svg>',
+    history: '<svg viewBox="0 0 48 48" aria-hidden="true"><g fill="currentColor"><path d="M8 20h32v20a3 3 0 0 1-3 3H11a3 3 0 0 1-3-3z" opacity=".4"/><path d="M8 11a3 3 0 0 1 3-3h26a3 3 0 0 1 3 3v9H8z"/><rect x="13" y="3" width="5" height="11" rx="2.5"/><rect x="30" y="3" width="5" height="11" rx="2.5"/><path d="M14 25h7v6h-7zM27 25h7v6h-7zM14 34h7v6h-7z"/></g></svg>',
     mix: '<svg viewBox="0 0 48 48" aria-hidden="true"><g fill="currentColor"><rect x="7" y="7" width="15" height="15" rx="3"/><rect x="26" y="26" width="15" height="15" rx="3"/><rect x="26" y="7" width="15" height="15" rx="3" opacity=".5"/><rect x="7" y="26" width="15" height="15" rx="3" opacity=".5"/></g></svg>'
   };
 
@@ -118,7 +119,8 @@
   }
 
   function promptFor(t, it) {
-    if (t.kind === "image") return it.q || t.prompt;
+    if (it.q) return it.q;
+    if (it.title) return t.prompt;
     if (t.id === "pm") return "מי ראש הממשלה?";
     if (it.g === "film") return "איזה סרט זה?";
     return it.g === "f" ? "מי השחקנית?" : "מי השחקן?";
@@ -126,14 +128,20 @@
 
   function clueHtml(t, it) {
     const c = it.clue;
-    if (t.id === "pm") {
-      return '<div class="clue clue--pm"><p class="clue-years">' + esc(c.years) + '</p><p class="clue-fact">' + esc(c.fact) + "</p></div>";
+    if (c.big) {
+      return '<div class="clue clue--history"><p class="clue-big' + (String(c.big).length > 5 ? " clue-big--long" : "") + '">' + esc(c.big) + "</p>" +
+        (c.small ? '<p class="clue-small">' + esc(c.small) + "</p>" : "") + "</div>";
     }
-    if (it.g === "film") {
-      return '<div class="clue clue--film"><p class="clue-year">' + esc(c.year) + '</p><p class="clue-plot">' + esc(c.plot) + "</p></div>";
+    if (c.fact) {
+      return '<div class="clue clue--pm">' + (c.years ? '<p class="clue-years">' + esc(c.years) + "</p>" : "") +
+        '<p class="clue-fact' + (c.years ? "" : " clue-fact--solo") + '">' + esc(c.fact) + "</p></div>";
     }
-    return '<div class="clue clue--film"><p class="clue-role">' + esc(c.role) + '</p><p class="clue-title">' + esc(c.film) +
-      '</p><p class="clue-orig" dir="ltr">' + esc(c.orig) + ", " + esc(c.year) + "</p></div>";
+    if (c.plot) {
+      return '<div class="clue clue--film">' + (c.year ? '<p class="clue-year">' + esc(c.year) + "</p>" : "") +
+        '<p class="clue-plot">' + esc(c.plot) + "</p></div>";
+    }
+    return '<div class="clue clue--film"><p class="clue-role">' + esc(c.role) + '</p><p class="clue-title" dir="auto">' + esc(c.film) +
+      '</p><p class="clue-orig" dir="ltr">' + (c.orig ? esc(c.orig) + ", " : "") + esc(c.year) + "</p></div>";
   }
 
   /* ---------- screens ---------- */
@@ -155,7 +163,7 @@
           "</button></li>").join("") +
         '<li><button type="button" class="topic topic--mix" data-topic="mix">' +
           '<span class="topic-window">' + ICONS.mix + "</span>" +
-          '<span class="topic-text"><strong>מכל הנושאים</strong><small>' + line("mix", "שתי שאלות מכל נושא") + "</small></span>" +
+          '<span class="topic-text"><strong>מכל הנושאים</strong><small>' + line("mix", "שאלות מעורבות מכל הנושאים") + "</small></span>" +
         "</button></li>" +
         "</ul>" +
         '<p class="home-foot">התמונות נטענות מוויקיפדיה. <a href="#gallery">כל התמונות והמקורות</a></p>' +
@@ -188,9 +196,11 @@
       DATA.topics.forEach((t) => {
         const mixed = shuffle(t.items);
         mixed.slice(0, 2).forEach((it) => picks.push({ t: t, it: it }));
-        mixed.slice(2, 5).forEach((it) => spares.push({ t: t, it: it }));
+        mixed.slice(2, 4).forEach((it) => spares.push({ t: t, it: it }));
       });
       picks = shuffle(picks);
+      spares = picks.slice(ROUND).concat(spares);
+      picks = picks.slice(0, ROUND);
       name = short = "מכל הנושאים";
       color = "var(--lamp)";
     } else {
@@ -198,7 +208,7 @@
       if (!t) return renderHome();
       const mixed = shuffle(t.items);
       picks = mixed.slice(0, ROUND).map((it) => ({ t: t, it: it }));
-      spares = mixed.slice(ROUND).map((it) => ({ t: t, it: it }));
+      spares = mixed.slice(ROUND, ROUND + 6).map((it) => ({ t: t, it: it }));
       name = t.name;
       short = t.short;
       color = t.color;
@@ -206,7 +216,7 @@
 
     state = { topicId: topicId, name: name, short: short, color: color, queue: picks, spares: spares, idx: 0, score: 0, log: [] };
 
-    const titles = picks.concat(spares).filter((q) => q.t.kind === "image").map((q) => q.it.title);
+    const titles = picks.concat(spares).filter((q) => q.it.title).map((q) => q.it.title);
     if (titles.length) {
       app.innerHTML = '<section class="message message--wait"><p>טוען תמונות</p></section>';
       try {
@@ -216,7 +226,7 @@
         return renderMessage("התמונות לא נטענו", "בדקו את החיבור לאינטרנט ונסו שוב.", topicId);
       }
       if (mine !== stamp) return;
-      const usable = (q) => q.t.kind !== "image" || thumbs.get(PLAY_SIZE + "|" + q.it.title);
+      const usable = (q) => !q.it.title || thumbs.get(PLAY_SIZE + "|" + q.it.title);
       state.spares = state.spares.filter(usable);
       state.queue = state.queue.map((q) => (usable(q) ? q : takeSpare(q))).filter(Boolean);
       if (!state.queue.length) {
@@ -268,7 +278,7 @@
       preloadNext();
     };
 
-    if (t.kind === "image") {
+    if (it.title) {
       const th = thumbs.get(PLAY_SIZE + "|" + it.title);
       loadImage(th.src).then(() => {
         if (mine !== stamp) return;
@@ -281,7 +291,7 @@
         replaceBroken();
       });
     } else {
-      ownPhoto(t.id, it.id).then((url) => {
+      (t.kind === "people" ? ownPhoto(t.id, it.p || it.id) : Promise.resolve(null)).then((url) => {
         if (mine !== stamp) return;
         if (url) {
           win.innerHTML = '<img class="pic pic--cover" alt="התמונה לשאלה"><button type="button" class="hint-btn" data-hint>רמז</button>';
@@ -311,11 +321,11 @@
   function preloadNext() {
     const next = state && state.queue[state.idx + 1];
     if (!next) return;
-    if (next.t.kind === "image") {
+    if (next.it.title) {
       const th = thumbs.get(PLAY_SIZE + "|" + next.it.title);
       if (th) new Image().src = th.src;
-    } else {
-      ownPhoto(next.t.id, next.it.id);
+    } else if (next.t.kind === "people") {
+      ownPhoto(next.t.id, next.it.p || next.it.id);
     }
   }
 
@@ -353,7 +363,7 @@
     if (dot) dot.className = "dot " + (ok ? "is-right" : "is-wrong");
 
     let source = "";
-    if (q.t.kind === "image") {
+    if (q.it.title) {
       const th = thumbs.get(PLAY_SIZE + "|" + q.it.title);
       if (th && th.file) {
         source = '<p class="source">מקור התמונה: <a href="' + FILE_PAGE + encodeURIComponent(th.file) + '" target="_blank" rel="noopener">ויקיפדיה</a></p>';
@@ -412,7 +422,9 @@
   async function renderGallery() {
     const mine = ++stamp;
     state = null;
-    const imageTopics = DATA.topics.filter((t) => t.kind === "image");
+    const imageTopics = DATA.topics
+      .map((t) => ({ name: t.name, items: t.items.filter((it) => it.title) }))
+      .filter((t) => t.items.length);
     app.innerHTML =
       '<section class="gallery">' +
         '<button type="button" class="secondary" data-home>חזרה למשחק</button>' +
